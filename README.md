@@ -155,7 +155,7 @@ Semua request (kecuali `/pair`) memakai header `Authorization: Bearer <token>`. 
 |---|---|---|
 | `POST` | `/pair` | `{code, name}` → `{token, status}` — hanya saat QR tampil |
 | `GET` | `/status` | `{id, name, mode, remainingMs, allowed[]}` |
-| `POST` | `/command` | `{cmd, minutes?, pkg?}` — `block` `unblock` `timer` `add` `allow` `deny` `lang` `tools` (pkg = on|off) |
+| `POST` | `/command` | `{cmd, minutes?, pkg?}` — `block` `unblock` `timer` `add` `allow` `deny` `lang` `tools` (pkg = on / off) |
 | `GET` | `/apps` | `[{pkg, label, allowed}]` |
 | `GET` | `/devices` | `[{id, name, self}]` |
 | `DELETE` | `/devices/{id}` | cabut akses HP |
