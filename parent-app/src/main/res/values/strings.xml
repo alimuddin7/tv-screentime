@@ -36,7 +36,6 @@
     <string name="min_left">min left</string>
     <string name="connected">%s connected</string>
     <string name="failed">Failed: %s</string>
-    <string name="scanner_unavailable">Scanner unavailable: %s</string>
     <string name="tv_offline">TV offline: %s</string>
     <string name="qr_expired">QR expired, reopen the pairing screen on the TV</string>
     <string name="tv_screen">TV home screen</string>

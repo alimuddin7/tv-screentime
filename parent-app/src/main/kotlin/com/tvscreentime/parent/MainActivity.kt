@@ -59,9 +59,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.google.mlkit.vision.barcode.common.Barcode
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.launch
 import kotlin.concurrent.thread
 
@@ -109,19 +108,18 @@ class MainActivity : ComponentActivity() {
 
     private fun toast(msg: String) { lifecycleScope.launch { snackbar.showSnackbar(msg) } }
 
-    private fun scan() {
-        val opts = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).build()
-        GmsBarcodeScanning.getClient(this, opts).startScan()
-            .addOnSuccessListener { code ->
-                val raw = code.rawValue ?: return@addOnSuccessListener
-                thread {
-                    runCatching { Tvs.pair(raw, Build.MODEL) }
-                        .onSuccess { toast(getString(R.string.connected, it.name)) }
-                        .onFailure { toast(getString(R.string.failed, it.message)) }
-                }
-            }
-            .addOnFailureListener { toast(getString(R.string.scanner_unavailable, it.message)) }
+    private val scanner = registerForActivityResult(ScanContract()) { result ->
+        val raw = result.contents ?: return@registerForActivityResult // cancelled
+        thread {
+            runCatching { Tvs.pair(raw, Build.MODEL) }
+                .onSuccess { toast(getString(R.string.connected, it.name)) }
+                .onFailure { toast(getString(R.string.failed, it.message)) }
+        }
     }
+
+    private fun scan() = scanner.launch(
+        ScanOptions().setDesiredBarcodeFormats(ScanOptions.QR_CODE).setBeepEnabled(false).setOrientationLocked(false).setPrompt("")
+    )
 }
 
 @Composable

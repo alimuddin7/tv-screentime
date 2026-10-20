@@ -21,6 +21,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("com.squareup.okhttp3:okhttp:5.5.0")
-    // Google's code scanner: QR scanning without the CAMERA permission or a camera UI of our own.
-    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
+    // ZXing scanner: works without Google Play Services (e.g. Huawei tablets).
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 }

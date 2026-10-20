@@ -53,7 +53,7 @@ Semua state ada di TV. HP hanya mengirim perintah dan menerima status live lewat
 - Mac/Linux/Windows dengan **JDK 17+** dan **Android SDK** (Android Studio sudah cukup).
 - `adb` (ada di `Android/sdk/platform-tools`).
 - TV Android TV 9+ dengan **Developer options** aktif.
-- HP Android 9+ dengan Google Play Services (untuk scanner QR).
+- HP/tablet Android 9+ (tidak butuh Google Play Services — jalan juga di Huawei).
 - TV dan HP di **Wi-Fi yang sama**.
 
 ## Build
