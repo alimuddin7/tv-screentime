@@ -24,7 +24,7 @@ import org.json.JSONObject
 
 /**
  * Holds the timer and draws the "time's up" overlay.
- * Commands arrive as intent extras: cmd = block | unblock | timer | add | allow | deny, minutes = Int, pkg = String.
+ * Commands arrive as intent extras: cmd = block | unblock | timer | add | allow | deny | lang | tools, minutes = Int, pkg = String.
  * Debug from a PC: adb shell am start-foreground-service -n com.tvscreentime.tv/.ScreenTimeService --es cmd timer --ei minutes 1
  */
 class ScreenTimeService : Service() {
@@ -86,6 +86,7 @@ class ScreenTimeService : Service() {
             "allow" -> setAllowed(pkg, true)
             "deny" -> setAllowed(pkg, false)
             "lang" -> { Lang.set(this, pkg); overlay?.let { hideOverlay() } }
+            "tools" -> prefs.edit().putBoolean("showTools", pkg == "on").apply()
         }
         Log.i(TAG, "mode=$mode remaining=${remainingMs / 1000}s")
         if (!ticking) { ticking = true; lastTick = SystemClock.elapsedRealtime(); tick() }
@@ -96,6 +97,7 @@ class ScreenTimeService : Service() {
         .put("id", tvId).put("name", tvName)
         .put("mode", mode.name).put("remainingMs", remainingMs)
         .put("allowed", JSONArray(allowedApps(this).sorted()))
+        .put("tools", showTools(this))
 
     /** Launchable TV apps the parent can allow. */
     fun appsJson(): JSONArray {
@@ -173,6 +175,9 @@ class ScreenTimeService : Service() {
         fun status(context: Context): Pair<Mode, Long> = context.getSharedPreferences("state", MODE_PRIVATE).let {
             Mode.valueOf(it.getString("mode", Mode.UNLOCKED.name)!!) to it.getLong("remainingMs", 0)
         }
+
+        /** Whether the launcher shows the input / network / settings icons (set from the phone). */
+        fun showTools(context: Context) = context.getSharedPreferences("state", MODE_PRIVATE).getBoolean("showTools", true)
 
         fun allowedApps(context: Context): Set<String> =
             context.getSharedPreferences("state", MODE_PRIVATE).getStringSet("allowed", emptySet())!!

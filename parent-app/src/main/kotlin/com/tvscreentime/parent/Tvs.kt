@@ -27,11 +27,12 @@ data class Tv(val id: String, val name: String, val host: String, val port: Int,
     }
 }
 
-data class Status(val mode: String, val remainingMs: Long, val allowed: Set<String>) {
+data class Status(val mode: String, val remainingMs: Long, val allowed: Set<String>, val tools: Boolean) {
     companion object {
         fun fromJson(o: JSONObject) = Status(
             o.getString("mode"), o.getLong("remainingMs"),
             o.getJSONArray("allowed").let { a -> (0 until a.length()).map(a::getString).toSet() },
+            o.optBoolean("tools", true),
         )
     }
 }

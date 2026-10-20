@@ -123,6 +123,7 @@ Pairing hanya terbuka selama layar QR tampil, dan satu QR hanya berlaku untuk sa
 | **+15 / −15** | Tambah/kurangi sisa waktu (juga membuka TV yang sedang terkunci karena timer) |
 | **Kunci** | Overlay langsung muncul |
 | **Bebas / Buka** | Tanpa batas waktu |
+| **Atur → Tampilkan ikon Input, Wi-Fi & Setelan** | Sembunyikan/tampilkan ikon itu di launcher (ikon pairing selalu tampil) |
 | **Atur → App** | Tampilkan/sembunyikan app di launcher |
 | **Atur → Channel YouTube** | Isi tile Video |
 | **ID / EN** | Bahasa HP dan semua TV |
@@ -154,7 +155,7 @@ Semua request (kecuali `/pair`) memakai header `Authorization: Bearer <token>`. 
 |---|---|---|
 | `POST` | `/pair` | `{code, name}` → `{token, status}` — hanya saat QR tampil |
 | `GET` | `/status` | `{id, name, mode, remainingMs, allowed[]}` |
-| `POST` | `/command` | `{cmd, minutes?, pkg?}` — `block` `unblock` `timer` `add` `allow` `deny` `lang` |
+| `POST` | `/command` | `{cmd, minutes?, pkg?}` — `block` `unblock` `timer` `add` `allow` `deny` `lang` `tools` (pkg = on|off) |
 | `GET` | `/apps` | `[{pkg, label, allowed}]` |
 | `GET` | `/devices` | `[{id, name, self}]` |
 | `DELETE` | `/devices/{id}` | cabut akses HP |

@@ -39,4 +39,6 @@
     <string name="scanner_unavailable">Scanner tidak tersedia: %s</string>
     <string name="tv_offline">TV offline: %s</string>
     <string name="qr_expired">QR kedaluwarsa, buka ulang layar pairing di TV</string>
+    <string name="tv_screen">Layar utama TV</string>
+    <string name="show_tools">Tampilkan ikon Input, Wi-Fi &amp; Setelan</string>
 </resources>

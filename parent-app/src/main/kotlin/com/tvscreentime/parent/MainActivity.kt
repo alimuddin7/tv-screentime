@@ -277,6 +277,15 @@ private fun TvDetail(tv: Tv, onBack: () -> Unit, toast: (String) -> Unit) {
                 Pill(stringResource(R.string.save), { Tvs.rename(tv, name) }, enabled = name.trim() != tv.name, weight = false)
             }
 
+            Section(stringResource(R.string.tv_screen))
+            Panel(padding = 0.dp) {
+                Line(stringResource(R.string.show_tools)) {
+                    Switch(Tvs.status[tv.id]?.tools ?: true,
+                        { Tvs.command(tv, "tools", pkg = if (it) "on" else "off", onError = toast) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = Color(0xFF30D158)))
+                }
+            }
+
             Section(stringResource(R.string.channels))
         }
         item {

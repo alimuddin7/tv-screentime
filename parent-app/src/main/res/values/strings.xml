@@ -39,4 +39,6 @@
     <string name="scanner_unavailable">Scanner unavailable: %s</string>
     <string name="tv_offline">TV offline: %s</string>
     <string name="qr_expired">QR expired, reopen the pairing screen on the TV</string>
+    <string name="tv_screen">TV home screen</string>
+    <string name="show_tools">Show Input, Wi-Fi &amp; Settings icons</string>
 </resources>

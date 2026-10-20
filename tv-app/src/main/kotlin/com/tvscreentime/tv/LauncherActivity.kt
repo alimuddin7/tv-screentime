@@ -34,6 +34,10 @@ class LauncherActivity : Activity() {
     private var lang: String? = null
     // Top bar and tile row are far apart, so D-pad focus search needs explicit up/down links.
     private val topIcons = mutableListOf<View>()
+    private val toolIcons = mutableListOf<View>()
+    private val prefsListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "showTools") applyTools()
+    }
     private lateinit var shelf: ImageView
     private lateinit var title: TextView
     private lateinit var remaining: TextView
@@ -68,9 +72,10 @@ class LauncherActivity : Activity() {
             })
             addView(View(this@LauncherActivity), LinearLayout.LayoutParams(0, 0, 1f))
             // Input source, network and pairing: reachable with D-pad UP, deliberately quiet.
-            addView(topIcon(R.drawable.ic_input, R.string.input_source) { pickInput() })
-            addView(topIcon(R.drawable.ic_wifi, R.string.network) { openSettings(Settings.ACTION_WIFI_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS) })
-            addView(topIcon(R.drawable.ic_settings, R.string.tv_settings) { openSettings(Settings.ACTION_SETTINGS) })
+            toolIcons += topIcon(R.drawable.ic_input, R.string.input_source) { pickInput() }
+            toolIcons += topIcon(R.drawable.ic_wifi, R.string.network) { openSettings(Settings.ACTION_WIFI_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS) }
+            toolIcons += topIcon(R.drawable.ic_settings, R.string.tv_settings) { openSettings(Settings.ACTION_SETTINGS) }
+            toolIcons.forEach { addView(it) }
             addView(topIcon(R.drawable.ic_phone, R.string.pair_title) { startActivity(Intent(this@LauncherActivity, PairActivity::class.java)) })
         }
 
@@ -110,10 +115,13 @@ class LauncherActivity : Activity() {
         ScreenTimeService.allowedApps(this).sorted().forEach { addAppTile(it, null) }
         row.getChildAt(0)?.requestFocus()
         row.getChildAt(0)?.let { first -> topIcons.forEach { it.nextFocusDownId = first.id } }
+        applyTools()
+        getSharedPreferences("state", MODE_PRIVATE).registerOnSharedPreferenceChangeListener(prefsListener)
         handler.post(refresh)
     }
 
     override fun onPause() {
+        getSharedPreferences("state", MODE_PRIVATE).unregisterOnSharedPreferenceChangeListener(prefsListener)
         handler.removeCallbacks(refresh)
         super.onPause()
     }
@@ -183,6 +191,14 @@ class LauncherActivity : Activity() {
         shelf.setImageBitmap(tiny(art))
         shelf.animate().alpha(1f).setDuration(300).start()
         title.text = name
+    }
+
+    /** Show or hide the tool icons (from the phone); D-pad UP from the tiles goes to the first visible icon. */
+    private fun applyTools() {
+        val show = ScreenTimeService.showTools(this)
+        toolIcons.forEach { it.visibility = if (show) View.VISIBLE else View.GONE }
+        val up = topIcons.first { it.visibility == View.VISIBLE }.id
+        for (i in 0 until row.childCount) row.getChildAt(i).nextFocusUpId = up
     }
 
     private fun topIcon(icon: Int, label: Int, onClick: () -> Unit) = ImageView(this).apply {
