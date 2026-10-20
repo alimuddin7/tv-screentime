@@ -32,6 +32,8 @@ class LauncherActivity : Activity() {
 
     private lateinit var row: LinearLayout
     private var lang: String? = null
+    // Top bar and tile row are far apart, so D-pad focus search needs explicit up/down links.
+    private val topIcons = mutableListOf<View>()
     private lateinit var shelf: ImageView
     private lateinit var title: TextView
     private lateinit var remaining: TextView
@@ -56,22 +58,20 @@ class LauncherActivity : Activity() {
         remaining = text(20f, "sans-serif").apply { alpha = 0.7f }
         val clock = TextClock(this).apply {
             format24Hour = "HH:mm"; format12Hour = "HH:mm"
-            textSize = 26f; setTextColor(Color.WHITE); typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+            textSize = 34f; setTextColor(Color.WHITE); typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
         }
         val top = LinearLayout(this).apply {
             setPadding(dp(64), dp(40), dp(64), 0)
+            addView(LinearLayout(this@LauncherActivity).apply {
+                orientation = LinearLayout.VERTICAL
+                addView(clock); addView(remaining)
+            })
             addView(View(this@LauncherActivity), LinearLayout.LayoutParams(0, 0, 1f))
             // Input source, network and pairing: reachable with D-pad UP, deliberately quiet.
             addView(topIcon(R.drawable.ic_input, R.string.input_source) { pickInput() })
             addView(topIcon(R.drawable.ic_wifi, R.string.network) { openSettings(Settings.ACTION_WIFI_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS) })
             addView(topIcon(R.drawable.ic_settings, R.string.tv_settings) { openSettings(Settings.ACTION_SETTINGS) })
             addView(topIcon(R.drawable.ic_phone, R.string.pair_title) { startActivity(Intent(this@LauncherActivity, PairActivity::class.java)) })
-            addView(View(this@LauncherActivity), LinearLayout.LayoutParams(dp(24), 0))
-            addView(LinearLayout(this@LauncherActivity).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.END
-                addView(clock); addView(remaining)
-            })
         }
 
         row = LinearLayout(this).apply {
@@ -109,6 +109,7 @@ class LauncherActivity : Activity() {
             ?.let { addAppTile(it, getString(R.string.tv_digital)) }
         ScreenTimeService.allowedApps(this).sorted().forEach { addAppTile(it, null) }
         row.getChildAt(0)?.requestFocus()
+        row.getChildAt(0)?.let { first -> topIcons.forEach { it.nextFocusDownId = first.id } }
         handler.post(refresh)
     }
 
@@ -136,17 +137,19 @@ class LauncherActivity : Activity() {
     private fun addTile(art: Drawable, name: String, banner: Boolean, onClick: () -> Unit) {
         val radius = dp(12).toFloat()
         val tile = FrameLayout(this).apply {
-            background = GradientDrawable().apply { cornerRadius = radius; setColor(Color.rgb(38, 38, 42)) }
             outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(v: View, o: Outline) = o.setRoundRect(0, 0, v.width, v.height, radius)
             }
             clipToOutline = true
             isFocusable = true
+            id = View.generateViewId()
+            nextFocusUpId = topIcons.first().id
+            // Portrait card: filled with the banner's edge colour so the banner blends in, the (landscape) banner or icon centered on top.
+            setBackgroundColor(edgeColor(art))
             addView(ImageView(this@LauncherActivity).apply {
                 setImageDrawable(art)
-                // Apps without a TV banner get their icon centered on the card.
-                scaleType = if (banner) ImageView.ScaleType.CENTER_CROP else ImageView.ScaleType.CENTER_INSIDE
-                if (!banner) setPadding(dp(48), dp(36), dp(48), dp(36))
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                if (banner) setPadding(dp(10), 0, dp(10), 0) else setPadding(dp(40), 0, dp(40), 0)
             }, FrameLayout.LayoutParams(-1, -1))
             onFocusChangeListener = View.OnFocusChangeListener { v, focused ->
                 val s = if (focused) 1.12f else 1f
@@ -155,21 +158,36 @@ class LauncherActivity : Activity() {
             }
             setOnClickListener { onClick() }
         }
-        row.addView(tile, LinearLayout.LayoutParams(dp(224), dp(126)).apply { marginEnd = dp(40) })
+        row.addView(tile, LinearLayout.LayoutParams(dp(150), dp(225)).apply { marginEnd = dp(32) })
+    }
+
+    /** Colour at the left edge of the art: most TV banners sit on a flat background. */
+    private fun edgeColor(art: Drawable): Int {
+        val b = Bitmap.createBitmap(32, 18, Bitmap.Config.ARGB_8888)
+        val bounds = art.copyBounds()
+        art.setBounds(0, 0, 32, 18); art.draw(Canvas(b)); art.bounds = bounds
+        val c = b.getPixel(1, 9)
+        return if (Color.alpha(c) < 128) Color.rgb(38, 38, 42) else c or 0xFF000000.toInt()
+    }
+
+    private fun tiny(art: Drawable): Bitmap {
+        val small = Bitmap.createBitmap(6, 4, Bitmap.Config.ARGB_8888)
+        val bounds = art.copyBounds()
+        art.setBounds(0, 0, 6, 4); art.draw(Canvas(small)); art.bounds = bounds
+        return small
     }
 
     /** Fake blur that works on API 28: render the art at 6x4 and let FIT_XY upscale it smoothly. */
     private fun showShelf(art: Drawable, name: String) {
-        val small = Bitmap.createBitmap(6, 4, Bitmap.Config.ARGB_8888)
-        val bounds = art.copyBounds()
-        art.setBounds(0, 0, 6, 4); art.draw(Canvas(small)); art.bounds = bounds
         shelf.alpha = 0f
-        shelf.setImageBitmap(small)
+        shelf.setImageBitmap(tiny(art))
         shelf.animate().alpha(1f).setDuration(300).start()
         title.text = name
     }
 
     private fun topIcon(icon: Int, label: Int, onClick: () -> Unit) = ImageView(this).apply {
+        id = View.generateViewId()
+        topIcons += this
         setImageResource(icon)
         contentDescription = getString(label)
         alpha = 0.4f; isFocusable = true
@@ -181,10 +199,16 @@ class LauncherActivity : Activity() {
 
     /** HDMI/AV/tuner picker from the system's TV inputs. Passthrough inputs open in the Live TV app. */
     private fun pickInput() {
-        val inputs = getSystemService(TvInputManager::class.java)?.tvInputList.orEmpty()
-            .filter { !it.isHidden(this) }
+        // Only the TV's own hardware inputs: those from the package that provides HDMI. App "inputs" (Play Movies, …) are left out.
+        val all = getSystemService(TvInputManager::class.java)?.tvInputList.orEmpty().filter { !it.isHidden(this) }
+        val hwPackages = all.filter { it.isPassthroughInput }.map { it.serviceInfo.packageName }.toSet()
+        val inputs = all.filter { it.serviceInfo.packageName in hwPackages }
+            .sortedBy { if (it.isPassthroughInput) 1 else 0 }
         if (inputs.isEmpty()) return openTuner()
-        val labels = inputs.map { it.loadCustomLabel(this)?.toString() ?: it.loadLabel(this).toString() }.toTypedArray()
+        val labels = inputs.map {
+            if (!it.isPassthroughInput) getString(R.string.tv_digital)
+            else it.loadCustomLabel(this)?.toString() ?: it.loadLabel(this).toString()
+        }.toTypedArray()
         AlertDialog.Builder(this)
             .setTitle(R.string.input_source)
             .setItems(labels) { _, i ->
