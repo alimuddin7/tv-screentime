@@ -1,8 +1,11 @@
 package com.tvscreentime.tv
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
+import android.media.tv.TvContract
+import android.media.tv.TvInputManager
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Outline
@@ -12,6 +15,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewOutlineProvider
@@ -57,13 +61,12 @@ class LauncherActivity : Activity() {
         val top = LinearLayout(this).apply {
             setPadding(dp(64), dp(40), dp(64), 0)
             addView(View(this@LauncherActivity), LinearLayout.LayoutParams(0, 0, 1f))
-            // Pairing/settings entry: reachable with D-pad UP, deliberately quiet.
-            addView(text(26f, "sans-serif-light").apply {
-                text = "⚙"; alpha = 0.4f; isFocusable = true
-                setPadding(dp(16), 0, dp(24), 0)
-                setOnFocusChangeListener { v, f -> v.alpha = if (f) 1f else 0.4f }
-                setOnClickListener { startActivity(Intent(this@LauncherActivity, PairActivity::class.java)) }
-            })
+            // Input source, network and pairing: reachable with D-pad UP, deliberately quiet.
+            addView(topIcon(R.drawable.ic_input, R.string.input_source) { pickInput() })
+            addView(topIcon(R.drawable.ic_wifi, R.string.network) { openSettings(Settings.ACTION_WIFI_SETTINGS, Settings.ACTION_WIRELESS_SETTINGS) })
+            addView(topIcon(R.drawable.ic_settings, R.string.tv_settings) { openSettings(Settings.ACTION_SETTINGS) })
+            addView(topIcon(R.drawable.ic_phone, R.string.pair_title) { startActivity(Intent(this@LauncherActivity, PairActivity::class.java)) })
+            addView(View(this@LauncherActivity), LinearLayout.LayoutParams(dp(24), 0))
             addView(LinearLayout(this@LauncherActivity).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.END
@@ -164,6 +167,46 @@ class LauncherActivity : Activity() {
         shelf.setImageBitmap(small)
         shelf.animate().alpha(1f).setDuration(300).start()
         title.text = name
+    }
+
+    private fun topIcon(icon: Int, label: Int, onClick: () -> Unit) = ImageView(this).apply {
+        setImageResource(icon)
+        contentDescription = getString(label)
+        alpha = 0.4f; isFocusable = true
+        setPadding(dp(14), dp(4), dp(14), dp(4))
+        layoutParams = LinearLayout.LayoutParams(dp(58), dp(38))
+        setOnFocusChangeListener { v, f -> v.alpha = if (f) 1f else 0.4f }
+        setOnClickListener { onClick() }
+    }
+
+    /** HDMI/AV/tuner picker from the system's TV inputs. Passthrough inputs open in the Live TV app. */
+    private fun pickInput() {
+        val inputs = getSystemService(TvInputManager::class.java)?.tvInputList.orEmpty()
+            .filter { !it.isHidden(this) }
+        if (inputs.isEmpty()) return openTuner()
+        val labels = inputs.map { it.loadCustomLabel(this)?.toString() ?: it.loadLabel(this).toString() }.toTypedArray()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.input_source)
+            .setItems(labels) { _, i ->
+                val input = inputs[i]
+                if (input.isPassthroughInput) runCatching {
+                    startActivity(Intent(Intent.ACTION_VIEW, TvContract.buildChannelUriForPassthroughInput(input.id))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }.onFailure { openTuner() }
+                else openTuner()
+            }
+            .show()
+    }
+
+    private fun openTuner() {
+        TUNER_PACKAGES.firstNotNullOfOrNull { packageManager.getLeanbackLaunchIntentForPackage(it) }
+            ?.let { startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+
+    private fun openSettings(vararg actions: String) {
+        (actions.toList() + Settings.ACTION_SETTINGS)
+            .firstOrNull { Intent(it).resolveActivity(packageManager) != null }
+            ?.let { startActivity(Intent(it).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }
 
     // A launcher's BACK should never leave it.

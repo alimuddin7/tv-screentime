@@ -19,6 +19,7 @@ Diuji di **Xiaomi Mi TV 4A (2018, Android TV 9, RAM 1 GB)**. Target berikutnya: 
 - **Timer berjalan di TV**, tetap jalan tanpa internet. Hanya berkurang saat layar menyala. Status tersimpan, aktif lagi setelah reboot, dan berjalan sebagai foreground service.
 - **Mode:** kunci total, bebas (tanpa batas), timer, tambah/kurangi waktu.
 - **Server LAN** (Ktor, HTTP + WebSocket, port `8787`) dan pengumuman diri via **mDNS/NSD** (`_tvscreentime._tcp`).
+- **Bar atas launcher** (tekan ▲): Sumber input (HDMI/AV/tuner), Jaringan, Setelan TV, dan pairing HP.
 - **Pairing via QR** (alamat + kode sekali pakai). Banyak HP bisa terhubung ke satu TV; menu **Perangkat terhubung** di TV untuk mencabut akses.
 - **Video:** daftar dari RSS YouTube (`youtube.com/feeds/videos.xml?channel_id=…`), diputar dengan **YouTube IFrame Player resmi** di WebView. Saat video selesai, TV kembali ke daftar sendiri — bukan ke rekomendasi YouTube. Shorts disaring. Tidak ada unduhan video (patuh ToS YouTube).
 
@@ -107,7 +108,7 @@ $ADB uninstall com.tvscreentime.tv
 
 ### 5. Pasang app HP dan hubungkan
 1. Install `parent-app-debug.apk` di HP (kirim file APK, atau `adb install` lewat Wireless debugging).
-2. Di TV: dari layar utama tekan **▲**, pilih **⚙** → muncul QR.
+2. Di TV: dari layar utama tekan **▲**, pilih ikon **HP 📱** → muncul QR.
 3. Di HP: **Tambah TV** → scan QR. Selesai.
 
 Pairing hanya terbuka selama layar QR tampil, dan satu QR hanya berlaku untuk satu HP. Untuk HP kedua, buka ulang layar QR.

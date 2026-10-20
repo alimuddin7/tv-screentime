@@ -2,7 +2,7 @@
     <string name="app_name">Screentime</string>
     <string name="add_tv">Tambah TV</string>
     <string name="no_tv">Belum ada TV</string>
-    <string name="no_tv_hint">Di layar utama TV tekan ▲, pilih ⚙ untuk menampilkan QR. HP dan TV harus di Wi-Fi yang sama.</string>
+    <string name="no_tv_hint">Di layar utama TV tekan ▲, pilih ikon HP 📱 untuk menampilkan QR. HP dan TV harus di Wi-Fi yang sama.</string>
     <string name="scan_qr">Scan QR di TV</string>
     <string name="all_tvs">Semua TV</string>
     <string name="manage">Atur</string>

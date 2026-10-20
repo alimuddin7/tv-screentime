@@ -19,4 +19,7 @@
     <string name="cant_play">This video can\'t be played (%d)</string>
     <string name="channel_bad_input">Enter a channel link or @handle</string>
     <string name="channel_not_found">Channel %s not found</string>
+    <string name="input_source">Input source</string>
+    <string name="network">Network</string>
+    <string name="tv_settings">TV settings</string>
 </resources>

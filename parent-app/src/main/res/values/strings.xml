@@ -2,7 +2,7 @@
     <string name="app_name">Screentime</string>
     <string name="add_tv">Add TV</string>
     <string name="no_tv">No TVs yet</string>
-    <string name="no_tv_hint">On the TV home screen press ▲, choose ⚙ to show the QR code. Phone and TV must be on the same Wi-Fi.</string>
+    <string name="no_tv_hint">On the TV home screen press ▲, choose the phone icon 📱 to show the QR code. Phone and TV must be on the same Wi-Fi.</string>
     <string name="scan_qr">Scan QR on TV</string>
     <string name="all_tvs">All TVs</string>
     <string name="manage">Manage</string>
